@@ -1,6 +1,6 @@
-# HVAC Air Freshener Front End
+# Web Interface
 
-A React control panel for [pi_hvac_controller](https://github.com/kcmodev/pi_hvac_controller), a Raspberry Pi that sprays air freshener into a home's return duct while the HVAC system runs. From a phone or browser, it shows what the system is doing and triggers a spray on demand.
+The React control panel for the [HVAC air freshener](../README.md), a Raspberry Pi that sprays air freshener into a home's return duct while the HVAC system runs. From a phone or browser, it shows what the system is doing and triggers a spray on demand.
 
 Built with React 19, TypeScript, Material UI and Vite, and tested with Vitest and React Testing Library.
 
@@ -13,11 +13,11 @@ Built with React 19, TypeScript, Material UI and Vite, and tested with Vitest an
 
 ## Getting started
 
-Requires Node.js 26 (`nvm use` picks it up from `.nvmrc`) and a running [controller](https://github.com/kcmodev/pi_hvac_controller). The controller runs on a Mac or PC with simulated hardware, so a Pi isn't needed for development.
+Requires Node.js 26 (`nvm use` picks it up from `.nvmrc`) and a running controller. The controller runs on a Mac or PC with simulated hardware, so a Pi isn't needed for development: see [Development](../README.md#development).
+
+From this folder:
 
 ```bash
-git clone https://github.com/kcmodev/hvac_front_end.git
-cd hvac_front_end
 npm install
 npm run dev   # http://localhost:3000
 ```
@@ -35,7 +35,7 @@ To develop against the real system, copy `.env.example` to `.env` and set `API_P
 
 ## Deploying
 
-The app is served by nginx on the Pi, next to the controller. Set that up first by following [Deploying on the Pi](https://github.com/kcmodev/pi_hvac_controller#deploying-on-the-pi) in the controller's README. Then build here and copy the files over:
+The app is served by nginx on the Pi, next to the controller. Set that up first by following [Deploying on the Pi](../README.md#deploying-on-the-pi). Then build here and copy the files over:
 
 ```bash
 npm run build
@@ -68,10 +68,6 @@ The page updates on the next reload, with no restart needed. To try a build from
 
 The tests sit beside the code they cover, and need no controller or hardware.
 
-## Security
+## Security and license
 
-Like the controller's API, this app has no authentication. Anyone who can reach it can trigger a spray, so keep both on a trusted home network.
-
-## License
-
-[MIT](LICENSE)
+See [Security](../README.md#security) and the [license](../LICENSE) for the whole project.

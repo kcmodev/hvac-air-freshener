@@ -7,8 +7,8 @@ Wants=network-online.target
 
 [Service]
 User=pi
-WorkingDirectory=/home/pi/pi_hvac_controller
-ExecStart=/home/pi/pi_hvac_controller/venv/bin/gunicorn app:app
+WorkingDirectory=/home/pi/hvac-air-freshener
+ExecStart=/home/pi/hvac-air-freshener/venv/bin/gunicorn app:app
 Restart=on-failure
 RestartSec=5
 

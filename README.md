@@ -2,7 +2,12 @@
 
 A Raspberry Pi that freshens a whole house using the air conditioning. It polls a Nest thermostat through Google's Smart Device Management API, and whenever the system is heating or cooling, it drives a motor that presses an air freshener can aimed at the air filter in the return duct. The running HVAC system then carries the scent through the house.
 
-This repository is the backend. It exposes an HTTP API for triggering a spray and checking on the system, and [hvac_front_end](https://github.com/kcmodev/hvac_front_end) is the React web interface that uses it. On the Pi, nginx serves both from one address.
+This repository holds the whole system:
+
+- **The controller**, in Python at the top level: a monitor loop that sprays automatically, and an HTTP API for triggering a spray and checking on the system.
+- **The web interface**, in [`frontend/`](frontend): a React app for phones and browsers that shows what the system is doing and triggers a spray on demand.
+
+On the Pi, nginx serves both from one address.
 
 ## How it works
 
@@ -15,7 +20,7 @@ flowchart LR
 
     subgraph Pi[Raspberry Pi]
         Nginx[nginx]
-        Files[hvac_front_end<br/>build files]
+        Files[frontend<br/>build files]
         Monitor[main.py<br/>monitor loop]
         Web[app.py<br/>Flask API on gunicorn]
         Lock{{sprayer lock}}
@@ -77,8 +82,8 @@ Follow Google's [Device Access getting started guide](https://developers.google.
 ### 2. Install
 
 ```bash
-git clone https://github.com/kcmodev/pi_hvac_controller.git
-cd pi_hvac_controller
+git clone https://github.com/kcmodev/hvac-air-freshener.git
+cd hvac-air-freshener
 
 # On Raspberry Pi OS, --system-site-packages exposes the preinstalled GPIO libraries
 python3 -m venv --system-site-packages venv
@@ -111,7 +116,7 @@ These steps continue from [Setup](#setup), in the cloned folder on the Pi.
    sudo apt install nginx
    ```
 
-2. **Start the API and monitor.** The service files assume the user `pi` and the folder `/home/pi/pi_hvac_controller`, so edit `User` and the paths first if yours differ.
+2. **Start the API and monitor.** The service files assume the user `pi` and the folder `/home/pi/hvac-air-freshener`, so edit `User` and the paths first if yours differ.
 
    ```bash
    sudo cp deploy/systemd/hvac-*.service /etc/systemd/system/
@@ -128,11 +133,20 @@ These steps continue from [Setup](#setup), in the cloned folder on the Pi.
    sudo nginx -t && sudo systemctl reload nginx
    ```
 
-4. **Add the web interface.** Create its folder, owned by your user so builds can be copied in without `sudo`, then follow the deploy steps in [hvac_front_end](https://github.com/kcmodev/hvac_front_end#deploying).
+4. **Add the web interface.** Create its folder, owned by your user so builds can be copied in without `sudo`:
 
    ```bash
    sudo mkdir -p /var/www/hvac
    sudo chown "$USER" /var/www/hvac
+   ```
+
+   Then, on your own computer, build it and copy it over. This needs Node.js, which the Pi doesn't, as the build output is plain HTML, CSS and JavaScript.
+
+   ```bash
+   cd frontend
+   npm install
+   npm run build
+   rsync -a --delete dist/ pi@<pi-address>:/var/www/hvac/
    ```
 
 To check on the system:
@@ -143,7 +157,7 @@ journalctl -u hvac-monitor -f   # follow the monitor's log
 curl http://localhost/api/status
 ```
 
-To update, run `git pull` and `venv/bin/pip install -r requirements.txt`, then `sudo systemctl restart hvac-api hvac-monitor`.
+To update the controller, run `git pull` and `venv/bin/pip install -r requirements.txt`, then `sudo systemctl restart hvac-api hvac-monitor`. To update the web interface, repeat the build and `rsync` from step 4; it takes effect on the next page load.
 
 ## Configuration
 
@@ -172,7 +186,7 @@ gunicorn ignores `HOST` and `PORT`. Its settings are in [`gunicorn.conf.py`](gun
 
 ## Development
 
-No Raspberry Pi or Nest account is needed to run the tests:
+No Raspberry Pi or Nest account is needed for development. For the controller:
 
 ```bash
 pip install -r requirements-dev.txt
@@ -182,7 +196,15 @@ ruff check .
 ruff format --check .
 ```
 
-To run the API away from a Pi, uncomment the `GPIOZERO_*` lines in `.env`. Without credentials, the thermostat routes respond with `503`. The frontend's development server sends its `/api` requests to `http://127.0.0.1:8000` by default, so the two work together locally.
+To run the API away from a Pi, uncomment the `GPIOZERO_*` lines in `.env`. Without credentials, the thermostat routes respond with `503`.
+
+For the web interface, with `python app.py` running, start its development server. It sends `/api` requests to the local API, so the two work together without a Pi. See [`frontend/README.md`](frontend/README.md) for more.
+
+```bash
+cd frontend
+npm install
+npm run dev   # http://localhost:3000
+```
 
 ```
 ├── app.py                  API routes
@@ -191,6 +213,7 @@ To run the API away from a Pi, uncomment the `GPIOZERO_*` lines in `.env`. Witho
 ├── deploy/
 │   ├── nginx/              Web server site
 │   └── systemd/            Services for the API and monitor
+├── frontend/               React web interface
 ├── pi_logic/
 │   ├── config.py           Environment-based settings
 │   ├── motor_logic.py      Motor control and the sprayer lock
