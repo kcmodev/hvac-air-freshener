@@ -1,0 +1,19 @@
+# Dependencies
+/node_modules
+
+# Build and test output
+/dist
+/coverage
+
+# Local configuration
+.env
+.env.local
+.env.*.local
+
+# Logs
+npm-debug.log*
+
+# Editors and OS
+.idea/
+.vscode/
+.DS_Store
