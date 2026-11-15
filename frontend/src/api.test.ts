@@ -10,22 +10,20 @@ function respondWith(status: number, body: unknown) {
 beforeEach(() => {
     fetchMock.mockReset();
     vi.stubGlobal('fetch', fetchMock);
-    vi.stubEnv('VITE_API_URL', 'http://pi.local:5000');
 });
 
 afterEach(() => {
     vi.unstubAllGlobals();
-    vi.unstubAllEnvs();
 });
 
-test('postSpray posts to the configured controller', async () => {
+test('postSpray posts to the API on the same address', async () => {
     respondWith(200, { date: '03/21/22', time: '15:13:20' });
 
     await expect(postSpray()).resolves.toEqual({
         date: '03/21/22',
         time: '15:13:20',
     });
-    expect(fetchMock).toHaveBeenCalledWith('http://pi.local:5000/spray', {
+    expect(fetchMock).toHaveBeenCalledWith('/api/spray', {
         method: 'POST',
     });
 });

@@ -1,0 +1,16 @@
+# Runs the API with gunicorn, which reads gunicorn.conf.py from WorkingDirectory.
+# Change User and the paths if your account or install folder differ.
+[Unit]
+Description=HVAC air freshener API
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=pi
+WorkingDirectory=/home/pi/pi_hvac_controller
+ExecStart=/home/pi/pi_hvac_controller/venv/bin/gunicorn app:app
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

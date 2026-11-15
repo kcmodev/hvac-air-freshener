@@ -13,31 +13,36 @@ Built with React 19, TypeScript, Material UI and Vite, and tested with Vitest an
 
 ## Getting started
 
-Requires Node.js 26 (`nvm use` picks it up from `.nvmrc`) and a running [controller](https://github.com/kcmodev/pi_hvac_controller).
+Requires Node.js 26 (`nvm use` picks it up from `.nvmrc`) and a running [controller](https://github.com/kcmodev/pi_hvac_controller). The controller runs on a Mac or PC with simulated hardware, so a Pi isn't needed for development.
 
 ```bash
 git clone https://github.com/kcmodev/hvac_front_end.git
 cd hvac_front_end
 npm install
-
-cp .env.example .env   # then set VITE_API_URL
-npm run dev            # http://localhost:3000
+npm run dev   # http://localhost:3000
 ```
 
-### Connecting to the controller
+### How it reaches the controller
 
-This app runs on a different origin from the controller, so two settings have to point at each other:
+The app calls the controller at `/api` on its own address, so neither needs to know where the other is hosted:
 
-| Where                   | Setting                                                            | Example                    |
-| ----------------------- | ------------------------------------------------------------------ | -------------------------- |
-| This project's `.env`   | `VITE_API_URL`: the controller's address, as seen from the browser | `http://192.168.1.50:5000` |
-| The controller's `.env` | `CORS_ALLOWED_ORIGIN`: the address this app is served from         | `http://192.168.1.50:3000` |
+| Running as                 | What answers `/api`                                                        |
+| -------------------------- | -------------------------------------------------------------------------- |
+| `npm run dev` or `preview` | Vite forwards it to `API_PROXY_TARGET`, by default `http://127.0.0.1:8000` |
+| Deployed on the Pi         | nginx forwards it to the controller's API                                  |
 
-Without `CORS_ALLOWED_ORIGIN`, the browser hides the controller's responses: the readings show as unavailable, and a spray runs but is reported as a failure. `VITE_API_URL` is read at build time, so rebuild after changing it.
+To develop against the real system, copy `.env.example` to `.env` and set `API_PROXY_TARGET` to the Pi's address. Sprays from the page are then real ones.
 
 ## Deploying
 
-`npm run build` produces static files in `dist/` that any web server can host, including one on the Pi. To try a build from another device on your network, run `npm run preview -- --host`.
+The app is served by nginx on the Pi, next to the controller. Set that up first by following [Deploying on the Pi](https://github.com/kcmodev/pi_hvac_controller#deploying-on-the-pi) in the controller's README. Then build here and copy the files over:
+
+```bash
+npm run build
+rsync -a --delete dist/ pi@<pi-address>:/var/www/hvac/
+```
+
+The page updates on the next reload, with no restart needed. To try a build from another device on your network first, run `npm run preview -- --host`.
 
 ## Scripts
 

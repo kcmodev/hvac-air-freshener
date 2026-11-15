@@ -14,12 +14,14 @@ export class ApiError extends Error {
     }
 }
 
-async function request<T>(path: string, init?: RequestInit): Promise<T> {
-    const baseUrl = import.meta.env.VITE_API_URL ?? '';
+// The controller's API is served from the same address as this app: by nginx on the
+// Pi, and by the Vite server's proxy during development.
+const API_BASE = '/api';
 
+async function request<T>(path: string, init?: RequestInit): Promise<T> {
     let response: Response;
     try {
-        response = await fetch(`${baseUrl}${path}`, init);
+        response = await fetch(`${API_BASE}${path}`, init);
     } catch {
         throw new ApiError('Could not reach the controller');
     }
